@@ -1,5 +1,10 @@
+certifi==2023.5.7
+charset-normalizer==3.2.0
+idna==3.4
 ping3==4.0.4
 python-dotenv==0.21.1
 python-nmap==0.7.1
 python3-nmap==1.6.0
+requests==2.31.0
 simplejson==3.18.3
+urllib3==2.0.3

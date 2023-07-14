@@ -1,7 +1,8 @@
 from socket import *
 from datetime import datetime
 from ping3 import verbose_ping
-import nmap3
+import getpass, nmap3, subprocess
+
 
 
 class ServerAnalysis:
@@ -10,7 +11,8 @@ class ServerAnalysis:
     self.scanner = nmap3.Nmap()
     self.start_port = start_port
     self.port_range = port_range
-    self.commands = "-sV -O -p1-65"
+    self.commands = "sudo nmap -sV -O -p1-65"
+
 
   def storage_result(self, file, result):
      with open(file, 'a+') as f:
@@ -19,7 +21,6 @@ class ServerAnalysis:
 
 
   def server_verifier(self):
-
     for port in range(self.start_port, self.port_range):
         s = socket(AF_INET, SOCK_STREAM)
         print(f"Scanning port {port} on {self.ip_server}")
@@ -48,11 +49,17 @@ class ServerAnalysis:
 
 
   def ports_verifier_nmap(self):
+      try:
+          root_password = getpass.getpass("Enter the root password: ")
+          command = ['sudo', '-S', 'nmap', self.commands]
+          subprocess.run(command, input=root_password, capture_output=True, text=True, check=True)
+          
+          response = self.scanner.scan_top_ports(self.ip_server, args=self.commands)
+          if not response:
+              self.storage_result("port_nmap_result.txt", f"Execution at: {datetime.now()}, response:{response}")
+              return False, f"Port nmap for domain {self.ip_server} was not possible."
 
-    response = self.scanner.scan_top_ports(self.ip_server, args=self.commands) 
-    if not response:
-       self.storage_result("port_nmap_result.txt", f"Execution at: {datetime.now()}, response:{response}")
-       return f"Port namp for domain {self.ip_server} was not possible."
-
-    self.storage_result("port_nmap_result.txt", f"Execution time: {datetime.now()}, response:{response}")
-    return response[0], f"Port namp service complete for domain {self.ip_server}."
+          self.storage_result("port_nmap_result.txt", f"Execution time: {datetime.now()}, response:{response}")
+          return response[0], f"Port nmap service complete for domain {self.ip_server}."
+      except subprocess.CalledProcessError as e:
+          raise e
